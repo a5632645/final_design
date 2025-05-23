@@ -1,0 +1,11 @@
+Comment,Designator,Footprint,LCSC,Quantity
+~,U2,touchpad6x6,,1
+MountingHole_M3,H4,MountingHole_3.2mm_M3,,1
+MountingHole_M3,H3,MountingHole_3.2mm_M3,,1
+MountingHole_M3,H2,MountingHole_3.2mm_M3,,1
+MountingHole_M3,H1,MountingHole_3.2mm_M3,,1
+75K,R3,R_0805_2012Metric,,1
+SM04B-SRSS-TB,J2,SM04BSRSSTB,,1
+MPR121QR2,U1,UQFN-20_3x3mm_P0.4mm,,1
+100N,C2,C_0805_2012Metric,,1
+100N,C1,C_0805_2012Metric,,1

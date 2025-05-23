@@ -1,0 +1,336 @@
+#include "system.h"
+#include "gpio.h"
+#include "delay.h"
+#include "uart.h"
+#include "touchkey.h"
+#include "pwm.h"
+
+#include <stdint.h>
+#include <stdio.h>
+#include <string.h>
+#include "ch554.h"
+#include "ch554_usb.h"
+
+#define KEYBOARD_FIRST 0
+#define KEYBOARD_LAST 1
+#define KEYBOARD_CENTER 2
+#define KEYBOARD_INDEX KEYBOARD_LAST
+
+// --------------------------------------------------------------------------------
+// Touchkey Slider
+// --------------------------------------------------------------------------------
+#define TIN0_PIN P11
+#define TIN1_PIN P14
+#define TIN2_PIN P15
+#define TKEY_DOWN_THRESHOLD 2000
+#define TKEY_UP_THRESHOLD 500
+#define TKEY_POS_SCALE 0x7f
+static const __code enum TouchKeyChannel tkeyChannelTable[] = {
+    TK_P11, TK_P15, TK_P14
+};
+#define TKEY_NUM (sizeof(tkeyChannelTable) / sizeof(enum TouchKeyChannel))
+
+static void TouchKey_Init(void);
+static uint8_t currentTkey = 0;
+static volatile int8_t tkeyFingerPosition = 0;
+uint16_t touchkeyFreeValues[TKEY_NUM];
+uint16_t absValues[TKEY_NUM];
+uint8_t pressFlag = 0;
+
+// --------------------------------------------------------------------------------
+// OH49E HALL ADC
+// --------------------------------------------------------------------------------
+#define ADC_PIN P32
+static void HallADC_Init(void);
+static volatile uint8_t hallAdcValue = 0;
+#define ADC_LOW_THRESHOLD 110
+#define ADC_HIGH_THRESHOLD 120
+
+// --------------------------------------------------------------------------------
+// Key SPI Commuunication
+// --------------------------------------------------------------------------------
+#define MAX_SPI_BUFFER_SIZE 64
+static __xdata uint8_t spiBuffer[MAX_SPI_BUFFER_SIZE];
+static uint8_t spiBufferLen = 0;
+static void KeyCommunication_Init(void);
+#define SPI_SCK_PIN P17
+#define SPI_MISO_PIN P16
+#define SPI_MOSI_PIN P15
+#define SPI_PREV_CS_PIN P33
+#define SPI_NEXT_CS_PIN P34
+#define SPI_SLAVE_SCS_PIN P14
+#define SPI_OK_PREV_PIN P30
+#define SPI_OK_NEXT_PIN P31
+
+#define SPI_RECEIVE_REQUEST_FLAG IE1
+
+static void SPITransfer_Last(void);
+
+inline uint16_t Abs(uint16_t a, uint16_t b) {
+    if (a > b) {
+        return a - b;
+    }
+    else {
+        return 0;
+    }
+}
+
+inline void CH554SPIMasterWrite(uint8_t dat) {
+    while (S0_FREE == 0) {}
+    SPI0_DATA = dat;
+}
+
+void main(void) {
+    CLK_config();
+    DLY_ms(5);
+
+    TouchKey_Init();
+    HallADC_Init();
+    KeyCommunication_Init();
+
+    for (;;) {
+		#if KEYBOARD_INDEX == KEYBOARD_CENTER
+        if (SPI_RECEIVE_REQUEST_FLAG == 1 || PIN_read(SPI_PREV_CS_PIN) == 0) { // 如果有传递请求
+            PIN_low(SPI_NEXT_CS_PIN);                                          // 传递到下一个按键
+            
+            if (currentTkey != 2) { // 如果当前电容按键不是SCS引脚
+                // SPI设置
+                PIN_high(SPI_NEXT_CS_PIN); // CH442E选择接收
+                PIN_output(SPI_SLAVE_SCS_PIN);
+                PIN_input(SPI_SCK_PIN);
+                PIN_input(SPI_MISO_PIN);
+                SPI0_SETUP = bS0_MODE_SLV;
+                SPI0_CTRL = bS0_DATA_DIR | bS0_2_WIRE | bS0_AUTO_IF | bS0_CLR_ALL;
+                SPI0_CTRL &= ~bS0_CLR_ALL;
+                
+                PIN_high(SPI_OK_PREV_PIN); // 回复接收就绪
+                do {
+                    SCS = 0;
+                    spiBufferLen = 0;
+                    for (;;) {
+                        if (S0_IF_BYTE == 1) {
+                            S0_IF_BYTE = 0;
+                            spiBuffer[spiBufferLen++] = SPI0_DATA;
+                        }
+                        if (PIN_read(SPI_PREV_CS_PIN) == 1) {
+                            break;
+                        }
+                    }
+                    SCS = 1;
+                } while (spiBufferLen == 0); // 长度为0则重新来过
+                PIN_low(SPI_OK_PREV_PIN);    // 回复接收没有问题
+                SPI_RECEIVE_REQUEST_FLAG = 0;// 清除传递请求
+                PIN_input(SPI_SLAVE_SCS_PIN);
+                spiBufferLen--;
+                
+                // 进入发送流程
+                PIN_output(SPI_SCK_PIN);
+                PIN_output(SPI_MISO_PIN);
+                
+                // SPI设置
+                SPI0_SETUP = 0;
+                SPI0_CK_SE = 0x20;
+                SPI0_CTRL = bS0_SCK_OE | bS0_MISO_OE | bS0_2_WIRE;
+
+                PIN_low(SPI_NEXT_CS_PIN);                 // 请求以及CH442E转发送
+                while (PIN_read(SPI_OK_NEXT_PIN) == 0) {} // 等待接收回应
+                DLY_us(2);
+                
+                for (uint8_t trys = 0; trys < 0xff; ++trys) {
+                    PIN_low(SPI_NEXT_CS_PIN);
+                    CH554SPIMasterWrite(hallAdcValue);
+                    CH554SPIMasterWrite(tkeyFingerPosition);
+                    for (uint8_t i = 0; i < spiBufferLen; ++i) {
+                        CH554SPIMasterWrite(spiBuffer[i]);
+                    }
+                    CH554SPIMasterWrite(0);
+
+                    DLY_us(1);
+                    PIN_high(SPI_NEXT_CS_PIN);
+                    DLY_us(1);
+                    // 看看传输是否成功
+                    if (0 == PIN_read(SPI_OK_NEXT_PIN)) {
+                        break;
+                    }
+                }
+            }
+        }
+		#elif KEYBOARD_INDEX == KEYBOARD_FIRST
+		if (SPI_RECEIVE_REQUEST_FLAG == 1) { // 如果有传递请求
+			PIN_low(SPI_NEXT_CS_PIN);        // 传递到下一个按键
+			// 进入发送流程	
+			PIN_output(SPI_SCK_PIN);
+			PIN_output(SPI_MISO_PIN);
+			// SPI设置
+			SPI0_SETUP = 0;
+			SPI0_CK_SE = 0x20;
+			SPI0_CTRL = bS0_SCK_OE | bS0_MISO_OE | bS0_2_WIRE;
+			PIN_low(SPI_NEXT_CS_PIN);                 // 请求以及CH442E转发送
+			while (PIN_read(SPI_OK_NEXT_PIN) == 0) {} // 等待接收回应
+			DLY_us(2);
+			
+			for (uint8_t trys = 0; trys < 0xff; ++trys) {
+				PIN_low(SPI_NEXT_CS_PIN);
+				CH554SPIMasterWrite(hallAdcValue);
+				CH554SPIMasterWrite(tkeyFingerPosition);
+				for (uint8_t i = 0; i < spiBufferLen; ++i) {
+					CH554SPIMasterWrite(spiBuffer[i]);
+				}
+				CH554SPIMasterWrite(0);
+
+				DLY_us(1);
+				PIN_high(SPI_NEXT_CS_PIN);
+				DLY_us(1);
+				// 看看传输是否成功
+				if (0 == PIN_read(SPI_OK_NEXT_PIN)) {
+					break;
+				}
+			}
+			SPI_RECEIVE_REQUEST_FLAG = 0;// 清除传递请求
+		}
+		#elif KEYBOARD_INDEX == KEYBOARD_LAST
+		if (SPI_RECEIVE_REQUEST_FLAG == 1 || PIN_read(SPI_CS_PIN) == 0) { // 如果有传递请求
+            if (currentTkey != 2) { // 如果当前电容按键不是SCS引脚
+                // SPI设置
+                PIN_high(SPI_IRQ_ENABLE_PIN); // CH442E选择接收
+                PIN_output(SPI_SLAVE_SCS_PIN);
+                PIN_input(SPI_SCK_PIN);
+                PIN_input(SPI_MISO_PIN);
+                SPI0_SETUP = bS0_MODE_SLV;
+                SPI0_CTRL = bS0_DATA_DIR | bS0_2_WIRE | bS0_AUTO_IF | bS0_CLR_ALL;
+                SPI0_CTRL &= ~bS0_CLR_ALL;
+                
+                PIN_high(SPI_OK_PREV_PIN); // 回复接收就绪
+                do {
+                    SCS = 0;
+                    spiBufferLen = 0;
+                    for (;;) {
+                        if (S0_IF_BYTE == 1) {
+                            S0_IF_BYTE = 0;
+                            spiBuffer[spiBufferLen++] = SPI0_DATA;
+                        }
+                        if (PIN_read(SPI_CS_PIN) == 1) {
+                            break;
+                        }
+                    }
+                    SCS = 1;
+                } while (spiBufferLen == 0); // 长度为0则重新来过
+                PIN_low(SPI_OK_PREV_PIN);    // 回复接收没有问题
+                SPI_RECEIVE_REQUEST_FLAG = 0;// 清除传递请求
+                spiBufferLen--;
+                
+                // 进入发送流程
+                // PIN_output(SPI_SCK_PIN);
+                PIN_output(SPI_MISO_PIN);
+                
+                // SPI设置
+                // SPI0_SETUP = 0;
+                // SPI0_CK_SE = 0x20;
+                SPI0_CTRL = bS0_MISO_OE | bS0_2_WIRE | bS0_AUTO_IF | bS0_CLR_ALL ;
+                SPI0_CTRL &= ~bS0_CLR_ALL;
+                
+                SPI0_S_PRE = hallAdcValue;
+                SCS = 0;
+                PIN_low(SPI_IRQ_ENABLE_PIN); // CH442E转发送
+                DLY_us(2);
+                
+                SPITransfer_Last();
+                
+                PIN_input(SPI_SLAVE_SCS_PIN);
+				PIN_high(SPI_IRQ_ENABLE_PIN);
+            }
+        }
+		#endif
+
+        if (ADC_START == 0) {
+            hallAdcValue = ADC_DATA;
+            ADC_START = 1;
+        }
+
+        if (TouchKey_Ready() == 1) {
+            uint16_t keyData = TKEY_DAT;
+
+            uint16_t diff = Abs(touchkeyFreeValues[currentTkey], keyData);
+            uint8_t mask = 1 << currentTkey;
+            if (diff < TKEY_UP_THRESHOLD) {
+                if (pressFlag & mask) {
+                    pressFlag &= ~mask;
+                }
+            }
+            else if (diff > TKEY_DOWN_THRESHOLD) {
+                if (!(pressFlag & mask)) {
+                    pressFlag |= mask;
+                }
+            }
+
+            absValues[currentTkey] = diff;
+            ++currentTkey;
+            if (currentTkey == TKEY_NUM) {
+                currentTkey = 0;
+
+                if (pressFlag) {
+                    int16_t nominator = absValues[2] - absValues[0];
+                    int16_t denominator = (absValues[0] + absValues[1] + absValues[2]) / TKEY_POS_SCALE;
+                    int16_t div = nominator / denominator;
+                    if (div < -TKEY_POS_SCALE) tkeyFingerPosition = -TKEY_POS_SCALE;
+                    else if (div > TKEY_POS_SCALE) tkeyFingerPosition = TKEY_POS_SCALE;
+                    else tkeyFingerPosition = div;
+                }
+                else {
+                    tkeyFingerPosition = 0;
+                }
+            }
+
+            TouchKey_Channel(tkeyChannelTable[currentTkey]);
+        }
+    }
+}
+
+// ---------------------------------------------------------------------------------
+static void TouchKey_Init(void) {
+    PIN_input(TIN0_PIN);
+    PIN_input(TIN1_PIN);
+    PIN_input(TIN2_PIN);
+    TouchKey_Fast();
+    for (uint8_t i = 0; i < TKEY_NUM; i++) {
+        touchkeyFreeValues[i] = TouchKey_PollRead(tkeyChannelTable[i]);
+    }
+    
+    TouchKey_Channel(tkeyChannelTable[0]);
+}                
+
+void HallADC_Init(void) {
+    PIN_input(ADC_PIN);
+    ADC_enable();
+    ADC_slow();
+    ADC_input(ADC_PIN);
+    ADC_START = 1;
+}
+
+void KeyCommunication_Init(void) {
+    PIN_input(SPI_CS_PIN);
+    PIN_output(SPI_IRQ_ENABLE_PIN);
+    PIN_output(SPI_OK_PREV_PIN);
+    PIN_input(SPI_WR_PIN);
+    PIN_high(SPI_IRQ_ENABLE_PIN);
+    PIN_low(SPI_OK_PREV_PIN);
+
+    IT1 = 1;
+    SPI_RECEIVE_REQUEST_FLAG = 0;
+
+    DLY_us(5);
+}
+
+void SPITransfer_Last(void) {
+    // CH554SPIMasterWrite(hallAdcValue);
+    while (S0_FREE == 0 && PIN_read(SPI_CS_PIN) == 0) {}
+    SPI0_DATA = tkeyFingerPosition;
+    if (PIN_read(SPI_CS_PIN) == 0) return;
+    // CH554SPIMasterWrite(tkeyFingerPosition);
+    for (uint8_t i = 0; i < spiBufferLen; ++i) {
+        // CH554SPIMasterWrite(spiBuffer[i]);
+        while (S0_FREE == 0 && PIN_read(SPI_CS_PIN) == 0) {}
+        if (PIN_read(SPI_CS_PIN) == 0) return;
+        SPI0_DATA = tkeyFingerPosition;
+    }
+}

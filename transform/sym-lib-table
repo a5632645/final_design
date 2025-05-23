@@ -1,0 +1,6 @@
+(sym_lib_table
+  (version 7)
+  (lib (name "SM04B-SRSS-TB")(type "KiCad")(uri "${KIPRJMOD}/symbol/SM04B-SRSS-TB.kicad_sym")(options "")(descr ""))
+  (lib (name "SM07B-SRSS-TB__LF__SN_")(type "KiCad")(uri "${KIPRJMOD}/symbol/SM07B-SRSS-TB__LF__SN_.kicad_sym")(options "")(descr ""))
+  (lib (name "STM32H750VBT6")(type "KiCad")(uri "${KIPRJMOD}/symbol/STM32H750VBT6.kicad_sym")(options "")(descr ""))
+)

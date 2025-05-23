@@ -1,0 +1,20 @@
+{
+    "configurations": [
+        {
+            "name": "mcs51",
+            "includePath": [
+                "${workspaceFolder}/tool",
+                "C:/Program Files/SDCC/include/mcs51"
+            ],
+            "defines": [
+                "__SDCC_mcs51_lint=1",
+                "F_CPU=24000000",
+                "PRINTF_DISABLE_SUPPORT_EXPONENTIAL",
+                "PRINTF_DISABLE_SUPPORT_FLOAT"
+            ],
+            "compilerPath": "C:/Program Files/SDCC/bin/sdcc.exe",
+            "cStandard": "c11"
+        }
+    ],
+    "version": 4
+}

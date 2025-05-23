@@ -1,0 +1,223 @@
+(footprint "SM07B-SRSS-TB"
+	(version 20241229)
+	(generator "pcbnew")
+	(generator_version "9.0")
+	(layer "F.Cu")
+	(descr "SM07B-SRSS-TB")
+	(tags "Connector")
+	(property "Reference" "J**"
+		(at 4.067 -1.85133 0)
+		(layer "F.SilkS")
+		(uuid "1d160997-c0e4-447e-b7e0-baf80ebc14f2")
+		(effects
+			(font
+				(size 1.27 1.27)
+				(thickness 0.254)
+			)
+		)
+	)
+	(property "Value" "SM07B-SRSS-TB"
+		(at 4.067 -1.85133 0)
+		(layer "F.SilkS")
+		(hide yes)
+		(uuid "09280794-db6f-47b0-bb23-e7b8e062f1ca")
+		(effects
+			(font
+				(size 1.27 1.27)
+				(thickness 0.254)
+			)
+		)
+	)
+	(property "Datasheet" ""
+		(at 0 0 0)
+		(layer "F.Fab")
+		(hide yes)
+		(uuid "8a841f1b-ca08-4cd1-b787-18b0c9afe657")
+		(effects
+			(font
+				(size 1.27 1.27)
+				(thickness 0.15)
+			)
+		)
+	)
+	(property "Description" ""
+		(at 0 0 0)
+		(layer "F.Fab")
+		(hide yes)
+		(uuid "7b1721fa-97d2-41b1-9873-21493bae6524")
+		(effects
+			(font
+				(size 1.27 1.27)
+				(thickness 0.15)
+			)
+		)
+	)
+	(attr smd)
+	(fp_line
+		(start 0 -4.4)
+		(end 0 -2.2)
+		(stroke
+			(width 0.254)
+			(type solid)
+		)
+		(layer "F.SilkS")
+		(uuid "8ebdee4d-4fe2-468a-9170-bb720038b9e5")
+	)
+	(fp_line
+		(start 0 -4.4)
+		(end 0.98 -4.4)
+		(stroke
+			(width 0.254)
+			(type solid)
+		)
+		(layer "F.SilkS")
+		(uuid "5da534dd-d67a-40c1-b99b-472da8936348")
+	)
+	(fp_line
+		(start 0.99433 0)
+		(end 7.96133 0)
+		(stroke
+			(width 0.254)
+			(type solid)
+		)
+		(layer "F.SilkS")
+		(uuid "86a1afb1-a91e-442a-8bb8-7b25545b11c6")
+	)
+	(fp_line
+		(start 9 -4.4)
+		(end 8.018 -4.4)
+		(stroke
+			(width 0.254)
+			(type solid)
+		)
+		(layer "F.SilkS")
+		(uuid "3f256460-8353-4c85-9dc9-8a59b3f9a5d5")
+	)
+	(fp_line
+		(start 9 -4.4)
+		(end 9 -2.2)
+		(stroke
+			(width 0.254)
+			(type solid)
+		)
+		(layer "F.SilkS")
+		(uuid "10043b03-cbbc-4011-a2ee-aa43b506c850")
+	)
+	(fp_line
+		(start 0 -4.4)
+		(end 9 -4.4)
+		(stroke
+			(width 0.254)
+			(type solid)
+		)
+		(layer "F.Fab")
+		(uuid "bffdfc7d-a70b-4d04-95ce-fa6cca3bed6e")
+	)
+	(fp_line
+		(start 0 0)
+		(end 0 -4.4)
+		(stroke
+			(width 0.254)
+			(type solid)
+		)
+		(layer "F.Fab")
+		(uuid "68f395ad-cf59-4fed-b68f-3c30c64ac29f")
+	)
+	(fp_line
+		(start 9 -4.4)
+		(end 9 0)
+		(stroke
+			(width 0.254)
+			(type solid)
+		)
+		(layer "F.Fab")
+		(uuid "a7edf466-6623-471f-a59d-404bd21c50e7")
+	)
+	(fp_line
+		(start 9 0)
+		(end 0 0)
+		(stroke
+			(width 0.254)
+			(type solid)
+		)
+		(layer "F.Fab")
+		(uuid "443ee3ae-c31d-40d2-9432-d4cb61ec2978")
+	)
+	(fp_text user "${REFERENCE}"
+		(at 4.067 -1.85133 0)
+		(layer "F.Fab")
+		(uuid "7b8c805c-d5aa-4389-b7f0-9e2b168be7fc")
+		(effects
+			(font
+				(size 1.27 1.27)
+				(thickness 0.254)
+			)
+		)
+	)
+	(pad "1" smd rect
+		(at 1.5 -4.87733)
+		(size 0.6 1.55)
+		(layers "F.Cu" "F.Mask" "F.Paste")
+		(uuid "a3297686-0b12-49ef-a295-957c831b1c21")
+	)
+	(pad "2" smd rect
+		(at 2.5 -4.87733)
+		(size 0.6 1.55)
+		(layers "F.Cu" "F.Mask" "F.Paste")
+		(uuid "f9e25539-cf7b-40be-8b06-57701f64bdbb")
+	)
+	(pad "3" smd rect
+		(at 3.5 -4.87733)
+		(size 0.6 1.55)
+		(layers "F.Cu" "F.Mask" "F.Paste")
+		(uuid "26743c6a-d90d-404b-a790-161660322fc3")
+	)
+	(pad "4" smd rect
+		(at 4.5 -4.87733)
+		(size 0.6 1.55)
+		(layers "F.Cu" "F.Mask" "F.Paste")
+		(uuid "c95547c6-18f8-4eaf-bf8c-6b6fdde1816f")
+	)
+	(pad "5" smd rect
+		(at 5.5 -4.87733)
+		(size 0.6 1.55)
+		(layers "F.Cu" "F.Mask" "F.Paste")
+		(uuid "d39a4b54-d5d5-440c-a84d-fc4dd00f76a4")
+	)
+	(pad "6" smd rect
+		(at 6.5 -4.87733)
+		(size 0.6 1.55)
+		(layers "F.Cu" "F.Mask" "F.Paste")
+		(uuid "c2e94595-104b-4a56-bc2f-fc440f7af222")
+	)
+	(pad "7" smd rect
+		(at 7.5 -4.87733)
+		(size 0.6 1.55)
+		(layers "F.Cu" "F.Mask" "F.Paste")
+		(uuid "a25a7887-cf8e-49e1-9a45-570096ca6ba9")
+	)
+	(pad "8" smd rect
+		(at 0.2 -1.00233)
+		(size 1.2 1.8)
+		(layers "F.Cu" "F.Mask" "F.Paste")
+		(uuid "18190474-0dce-4361-bfb5-830fcee92c1c")
+	)
+	(pad "9" smd rect
+		(at 8.8 -1.00233)
+		(size 1.2 1.8)
+		(layers "F.Cu" "F.Mask" "F.Paste")
+		(uuid "614f9411-1daa-483f-97fa-f455ddac9c93")
+	)
+	(embedded_fonts no)
+	(model "${KIPRJMOD}/3d/SM07B-SRSS-TB_LF__SN_.stp"
+		(offset
+			(xyz 4.5 4 0)
+		)
+		(scale
+			(xyz 1 1 1)
+		)
+		(rotate
+			(xyz -90 -0 -0)
+		)
+	)
+)

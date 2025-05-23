@@ -1,0 +1,8 @@
+(sym_lib_table
+  (version 7)
+  (lib (name "74LVC1G157GW")(type "KiCad")(uri "${KIPRJMOD}/symbol/74LVC1G157GW.kicad_sym")(options "")(descr ""))
+  (lib (name "BM03B-SRSS-TB_LFSN_")(type "KiCad")(uri "${KIPRJMOD}/symbol/BM03B-SRSS-TB_LFSN_.kicad_sym")(options "")(descr ""))
+  (lib (name "CH552G")(type "KiCad")(uri "${KIPRJMOD}/symbol/CH552G.kicad_sym")(options "")(descr ""))
+  (lib (name "SM03B-SRSS-TB_LF__SN_")(type "KiCad")(uri "${KIPRJMOD}/symbol/SM03B-SRSS-TB_LF__SN_.kicad_sym")(options "")(descr ""))
+  (lib (name "SM07B-SRSS-TB__LF__SN_")(type "KiCad")(uri "${KIPRJMOD}/symbol/SM07B-SRSS-TB__LF__SN_.kicad_sym")(options "")(descr ""))
+)

@@ -1,0 +1,7 @@
+Designator,Val,Package,Mid X,Mid Y,Rotation,Layer
+C1,100N,C_0805_2012Metric,183.92,-58.690894,90.0,bottom
+C2,100N,C_0805_2012Metric,181.16,-62.7,180.0,bottom
+J2,SM04B-SRSS-TB,SM04BSRSSTB,182.547113,-71.778894,0.0,bottom
+R3,75K,R_0805_2012Metric,180.490894,-66.81,0.0,bottom
+U1,MPR121QR2,UQFN-20_3x3mm_P0.4mm,176.9,-61.1,0.0,bottom
+U2,~,touchpad6x6,176.85,-61.156625,0.0,top
